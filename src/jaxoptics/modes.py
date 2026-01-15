@@ -33,15 +33,20 @@ class Gaussian:
         self.dtype = dtype
     
     def __call__(self, shape: Tuple[int, int], 
-                 ds: Tuple[float, float]) -> jnp.ndarray:
+                 ds: Tuple[float, float],
+                 center: Tuple[float, float]=(0, 0)) -> jnp.ndarray:
         """Generate Gaussian field.
         
         Returns:
             (nx, ny) complex array
         """
         x, y = spatial_grid(shape, ds)
+        xc, yc = center
+        x = x - xc
+        y = y - yc
         r2 = x**2 + y**2
-        return jnp.exp(-r2 / self.w0**2).astype(self.dtype)
+        A = jnp.sqrt(2.0 / (jnp.pi * self.w0**2))
+        return A*jnp.exp(-r2 / self.w0**2).astype(self.dtype)
 
 
 class HermiteGaussian:
@@ -63,14 +68,17 @@ class HermiteGaussian:
         self.Hn = hermite(n)
     
     def __call__(self, shape: Tuple[int, int],
-                 ds: Tuple[float, float]) -> jnp.ndarray:
+                 ds: Tuple[float, float],
+                 center: Tuple[float, float]=(0, 0)) -> jnp.ndarray:
         """Generate HG mode.
         
         Returns:
             (nx, ny) complex array
         """
         x, y = spatial_grid(shape, ds)
-        
+        xc, yc = center
+        x = x - xc
+        y = y - yc
         # Normalized coordinates
         u = jnp.sqrt(2) * x / self.w0
         v = jnp.sqrt(2) * y / self.w0
@@ -80,7 +88,8 @@ class HermiteGaussian:
         hg = self.Hm(u) * self.Hn(v) * gaussian
         
         # Normalization
-        norm = 1.0 / jnp.sqrt(2**(self.m + self.n) *
+        A = jnp.sqrt(2.0 / (jnp.pi * self.w0**2))
+        norm = A / jnp.sqrt(2**(self.m + self.n) *
                               math.factorial(self.m) * 
                               math.factorial(self.n))
         

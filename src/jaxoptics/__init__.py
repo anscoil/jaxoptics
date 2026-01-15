@@ -1,4 +1,4 @@
-from .fields import ScalarField
+from .fields import ScalarField, normalize_power
 from .modes import Gaussian, HermiteGaussian, spatial_grid
 from .freespace_propagators import ASProp
 from .modulators import Phase

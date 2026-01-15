@@ -67,3 +67,44 @@ class ScalarField(eqx.Module):
     @property
     def batch_shape(self):
         return self.shape[:-self.ndim_spatial]
+
+    @property
+    def power(self) -> jnp.ndarray:
+        """Compute power for each mode.
+        
+        Returns:
+        Scalar if no batch dims, array of shape batch_shape otherwise
+        """
+        # Sum over spatial dimensions
+        spatial_axes = tuple(range(-self.ndim_spatial, 0))
+        ds_product = jnp.prod(jnp.array(self.ds))
+        p = jnp.sum(jnp.abs(self.electric)**2, axis=spatial_axes) * ds_product
+    
+        # Return scalar if no batch
+        if p.shape == ():
+            return p.item()
+        return p
+    
+
+def normalize_power(field: ScalarField, 
+                    target_power: Union[float, jnp.ndarray] = 1.0) -> ScalarField:
+    """Normalize field to target power.
+    
+    Args:
+        field: Input field
+        target_power: Target power(s). Scalar or array matching batch_shape
+    
+    Returns:
+        New field with normalized power
+    """
+    current_power = field.power
+    target = jnp.asarray(target_power)
+    
+    scale = jnp.sqrt(target / current_power)
+    
+    if field.batch_shape != ():
+        new_shape = scale.shape + (1,) * field.ndim_spatial
+        scale = scale.reshape(new_shape)
+    
+    normalized_electric = field.electric * scale
+    return ScalarField(normalized_electric, field.ds, field.wavelengths)
