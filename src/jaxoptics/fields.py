@@ -55,6 +55,23 @@ class ScalarField(eqx.Module):
                     f"wavelengths shape {wl.shape} incompatible "
                     f"with batch dimensions {batch_shape}"
                 )
+
+    def __len__(self):
+        batch_shape = self.electric.shape[:-self.ndim_spatial]
+        return int(jnp.prod(jnp.array(batch_shape))) if batch_shape else 1
+
+    def __getitem__(self, idx):
+        batch_shape = self.electric.shape[:-self.ndim_spatial]
+    
+        if isinstance(idx, int):
+            # Convert linear to multi-dimensional index
+            if batch_shape:
+                multi_idx = jnp.unravel_index(idx, batch_shape)
+                return self.electric[multi_idx]
+            else:
+                return self.electric
+        else:
+            return self.electric[idx]
     
     @property
     def shape(self):
