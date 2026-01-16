@@ -64,8 +64,6 @@ class ASProp(eqx.Module):
     Supports both cached (static kernel) and dynamic (trainable distance) modes.
     """
     kernel: jnp.ndarray
-    ds: Tuple[float, float] = eqx.field(static=True)
-    wavelengths: jnp.ndarray
     z: jnp.ndarray
     filter_fn: Optional[Callable] = eqx.field(static=True)
     use_cache: bool = eqx.field(static=True)
@@ -73,7 +71,7 @@ class ASProp(eqx.Module):
     n0: float = eqx.field(static=True)
     
     def __init__(self,
-                 u0: ScalarField,
+                 u: ScalarField,
                  z: float,
                  use_cache: bool = True,
                  paraxial: bool = False,
@@ -81,15 +79,13 @@ class ASProp(eqx.Module):
                  n0: float = 1.0):
         """
         Args:
-            u0: Template field (for ds, wavelengths, shape)
+            u: Template field (for ds, wavelengths, shape)
             z: Propagation distance
             use_cache: Pre-compute kernel (static) vs dynamic
             paraxial: Use paraxial approximation
             filter: Optional frequency filter
             n0: Refractive index
         """
-        self.ds = u0.ds
-        self.wavelengths = u0.wavelengths
         self.z = jnp.array([z])  # Array for trainability
         self.use_cache = use_cache
         self.is_paraxial = paraxial
@@ -98,24 +94,17 @@ class ASProp(eqx.Module):
         
         # Pre-compute kernel if cached
         if use_cache:
-            # Deduce shape from u0
-            spatial_shape = u0.shape[-u0.ndim_spatial:]
+            # Deduce shape from u
+            spatial_shape = u.shape[-u.ndim_spatial:]
             
             # Build kernel (numpy)
-            self.kernel = make_AS_kernel(
-                spatial_shape,
-                self.ds,
-                self.wavelengths,
-                z,
-                n0,
-                paraxial,
-                filter_fn
-            )
+            self.kernel = make_AS_kernel(spatial_shape, u.ds, u.wavelengths,
+                                         z, n0, paraxial, filter_fn)
         else:
-            self.kernel = jnp.empty((0,), dtype=u0.electric.dtype)
+            self.kernel = jnp.empty((0,), dtype=u.electric.dtype)
     
-    def __call__(self, field: ScalarField) -> ScalarField:
-        """Propagate field through free space.
+    def __call__(self, u: ScalarField) -> ScalarField:
+        """Propagate the field u through free space.
         
         Args:
             field: Input field
@@ -131,23 +120,16 @@ class ASProp(eqx.Module):
         else:
             # Dynamic mode: z is trainable, compute kernel on-the-fly
             z_use = self.z[0]
-            spatial_shape = field.shape[-field.ndim_spatial:]
+            spatial_shape = u.shape[-u.ndim_spatial:]
             
             # Compute kernel dynamically
-            kernel = make_AS_kernel(
-                spatial_shape,
-                self.ds,
-                field.wavelengths,
-                z_use,
-                self.n0,
-                self.is_paraxial,
-                self.filter_fn
-            )
+            kernel = make_AS_kernel(spatial_shape, u.ds, u.wavelengths,
+                                    z_use, self.n0, self.is_paraxial, self.filter_fn)
         
         # FFT propagation
-        spatial_axes = tuple(range(-field.ndim_spatial, 0))
-        field_fft = jnp.fft.fft2(field.electric, axes=spatial_axes)
-        field_fft_prop = field_fft * kernel
-        electric_prop = jnp.fft.ifft2(field_fft_prop, axes=spatial_axes)
+        spatial_axes = tuple(range(-u.ndim_spatial, 0))
+        u_fft = jnp.fft.fft2(u.electric, axes=spatial_axes)
+        u_fft_prop = u_fft * kernel
+        electric_prop = jnp.fft.ifft2(u_fft_prop, axes=spatial_axes)
         
-        return ScalarField(electric_prop, field.ds, field.wavelengths)
+        return ScalarField(electric_prop, u.ds, u.wavelengths)
