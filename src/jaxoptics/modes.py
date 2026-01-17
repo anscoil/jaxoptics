@@ -1,7 +1,7 @@
 import jax.numpy as jnp
 from typing import Optional, Tuple, Union, Sequence, Callable
 from scipy.special import hermite
-import math
+from scipy.special import factorial
 
 def spatial_grid(shape: Tuple[int, ...], 
                  ds: Tuple[float, ...]) -> Tuple[jnp.ndarray, ...]:
@@ -96,7 +96,8 @@ class Gaussian:
     
     def __call__(self, shape: Tuple[int, int], 
                  ds: Tuple[float, float],
-                 center: Tuple[float, float]=(0, 0)) -> jnp.ndarray:
+                 center: Tuple[float, float]=(0, 0),
+                 rotation: float = 0) -> jnp.ndarray:
         """Generate Gaussian field.
         
         Returns:
@@ -160,10 +161,10 @@ class HermiteGaussian:
         hg = self.Hm(u) * self.Hn(v) * gaussian
         
         # Normalization
-        A = jnp.sqrt(2.0 / (jnp.pi * self.w0**2))
+        A = jnp.sqrt(2.0 / (jnp.pi * self.w0**2)) * (-1)**(2*self.m+self.n)
         norm = A / jnp.sqrt(2**(self.m + self.n) *
-                              math.factorial(self.m) * 
-                              math.factorial(self.n))
+                              factorial(self.m) * 
+                              factorial(self.n))
         
         return jnp.array(hg * norm, dtype=self.dtype)
 
