@@ -3,7 +3,7 @@ from .optical_sequence import OpticalSequence
 from .modes import spatial_grid, Gaussian, HermiteGaussian
 from .modes import GridLayout, TriangleLayout
 from .modes import generate_mode_stack, hermite_gaussian_groups
-from .freespace_propagators import ASProp
+from .freespace_propagators import ASProp, RSProp
 from .modulators import Phase
 from .visualize import visualize_stack, visualize_intensity
 
@@ -12,5 +12,5 @@ __all__ = ["ScalarField", "normalize_power", "OpticalSequence",
            "spatial_grid", "Gaussian", "HermiteGaussian",
            "GridLayout", "TriangleLayout",
            "generate_mode_stack", "hermite_gaussian_groups",
-           "ASProp", "Phase",
+           "ASProp", "RSProp", "Phase",
            "visualize_stack", "visualize_intensity"]

@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
 
 def visualize_stack(stack):
+    stack = stack[:]
     n_elems = stack.shape[0]
     ny, nx = stack.shape[-2:]
     aspect = ny / nx
@@ -14,7 +15,7 @@ def visualize_stack(stack):
         height = max(5, width * aspect / 2.5)
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(width, height))
         axes = [ax1, ax2]
-        transforms = [jnp.abs, jnp.angle]
+        transforms = [lambda x: jnp.abs(x)**2, jnp.angle]
         cmaps = ['inferno', 'twilight']
         clims = [None, (-jnp.pi, jnp.pi)]
     else:
