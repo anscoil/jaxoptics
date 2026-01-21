@@ -43,8 +43,8 @@ class ScalarField(eqx.Module):
         
         # Broadcast wavelengths to batch shape
         if wl.size == 1:
-            # Scalar: broadcast to batch shape
-            self.wavelengths = jnp.full(batch_shape, wl[0])
+            self.wavelengths = wl
+            # jnp.full(batch_shape, wl[0])
         else:
             # Check compatibility and broadcast
             wl = wl.reshape(wl.shape)  # Keep original shape
