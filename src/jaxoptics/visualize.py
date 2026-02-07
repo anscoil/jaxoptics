@@ -3,29 +3,57 @@ import jax.numpy as jnp
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
 
-def visualize_stack(stack):
+def visualize_stack(stack, 
+                   transform1=None,
+                   transform2=None,
+                   cmap1='inferno',
+                   cmap2='twilight',
+                   clim1=None,
+                   clim2=None):
+    """Visualize a stack of 2D arrays with interactive slider.
+    
+    Args:
+        stack: Array of shape (n_modes, ny, nx)
+        transform1: Transform for first image (default: intensity for complex, identity for real)
+        transform2: Optional transform for second image (default: phase for complex, None for real)
+        cmap1: Colormap for first image
+        cmap2: Colormap for second image
+        clim1: Optional (min, max) for first image colorbar
+        clim2: Optional (min, max) for second image colorbar
+    """
     stack = stack[:]
     n_elems = stack.shape[0]
     ny, nx = stack.shape[-2:]
     aspect = ny / nx
     is_complex = jnp.iscomplexobj(stack)
     
-    if is_complex:
+    # Set default transforms
+    if transform1 is None:
+        transform1 = (lambda x: jnp.abs(x)**2) if is_complex else (lambda x: x)
+    
+    if transform2 is None and is_complex:
+        transform2 = jnp.angle
+        clim2 = (-jnp.pi, jnp.pi) if clim2 is None else clim2
+    
+    # Setup figure
+    show_two = transform2 is not None
+    
+    if show_two:
         width = 14
         height = max(5, width * aspect / 2.5)
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(width, height))
         axes = [ax1, ax2]
-        transforms = [lambda x: jnp.abs(x)**2, jnp.angle]
-        cmaps = ['inferno', 'twilight']
-        clims = [None, (-jnp.pi, jnp.pi)]
+        transforms = [transform1, transform2]
+        cmaps = [cmap1, cmap2]
+        clims = [clim1, clim2]
     else:
         width = 6
         height = max(5, width * aspect / 1.1)
         fig, ax = plt.subplots(1, 1, figsize=(width, height))
         axes = [ax]
-        transforms = [lambda x: x]
-        cmaps = ['viridis']
-        clims = [None]
+        transforms = [transform1]
+        cmaps = [cmap1]
+        clims = [clim1]
     
     plt.subplots_adjust(bottom=0.2, top=0.90, left=0.1, right=0.9)
     
@@ -35,11 +63,14 @@ def visualize_stack(stack):
         im = ax.imshow(trans(stack[0]), cmap=cmap)
         if clim:
             im.set_clim(*clim)
-        if is_complex and trans == jnp.angle:
+        
+        # Special formatting for phase
+        if trans == jnp.angle or (clim and clim == (-jnp.pi, jnp.pi)):
             cbar = fig.colorbar(im, ax=ax, ticks=[-jnp.pi, 0, jnp.pi])
             cbar.ax.set_yticklabels(['-π', '0', 'π'])
-        elif not is_complex:
+        else:
             fig.colorbar(im, ax=ax)
+        
         ax.axis('off')
         images.append(im)
     
@@ -51,7 +82,7 @@ def visualize_stack(stack):
         for im, trans, clim in zip(images, transforms, clims):
             data = trans(stack[idx])
             im.set_data(data)
-            if not clim:  # auto clim for intensity/real values
+            if not clim:  # auto clim
                 im.set_clim(data.min(), data.max())
         fig.canvas.draw_idle()
     
@@ -64,7 +95,7 @@ def visualize_stack(stack):
     slider.on_changed(update)
     fig.canvas.mpl_connect('key_press_event', on_key)
     plt.show()
-    
+
 def visualize_intensity(*stacks):
     """Display total intensity of multiple stacks side by side.
     

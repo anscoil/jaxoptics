@@ -81,6 +81,114 @@ class TriangleLayout:
     
     def __len__(self):
         return len(self.positions)
+
+class ConcentricRingsLayout:
+    def __init__(self, n_rings: int, d: float, center_points: int = 1,
+                 n_extra: int = 4,
+                 offset: Tuple[float, float] = (0, 0), 
+                 rotation: float = 0):
+        """Concentric rings layout with increasing number of points.
+        
+        Each ring has n_extra more points than the previous one.
+        
+        Args:
+            n_rings: Number of rings
+            d: Distance between rings (ring i has radius i*d)
+            center_points: 1 (single center point) or 3 (first ring is 3 points)
+            offset: Translation offset
+            rotation: Rotation angle in radians
+        """
+        assert center_points in [1, 3], "center_points must be 1 or 3"
+        
+        positions = []
+        
+        if center_points == 1:
+            # Single point at center
+            positions.append((0.0, 0.0))
+            # Rings with 1+n_extra*i points at radius i*d
+            for i in range(1, n_rings + 1):
+                n_points = 1 + n_extra * i
+                radius = i * d
+                for k in range(n_points):
+                    angle = 2 * jnp.pi * k / n_points
+                    x = radius * jnp.cos(angle)
+                    y = radius * jnp.sin(angle)
+                    positions.append((float(x), float(y)))
+        else:  # center_points == 3
+            # First ring at d/√2 with 3 points
+            radius = d / jnp.sqrt(2)
+            for k in range(3):
+                angle = 2 * jnp.pi * k / 3
+                x = radius * jnp.cos(angle)
+                y = radius * jnp.sin(angle)
+                positions.append((float(x), float(y)))
+            
+            # Subsequent rings at normal positions
+            for i in range(2, n_rings + 1):
+                n_points = n_extra * i - 1
+                radius = (i-1/(2*jnp.sqrt(2))) * d
+                for k in range(n_points):
+                    angle = 2 * jnp.pi * k / n_points
+                    x = radius * jnp.cos(angle)
+                    y = radius * jnp.sin(angle)
+                    positions.append((float(x), float(y)))
+        
+        self.positions = self._apply_transform(positions, offset, rotation)
+    
+    def _apply_transform(self, positions, offset, rotation):
+        if rotation != 0:
+            cos_r, sin_r = jnp.cos(rotation), jnp.sin(rotation)
+            positions = [(float(x*cos_r - y*sin_r), float(x*sin_r + y*cos_r))
+                        for x, y in positions]
+        return [(x + offset[0], y + offset[1]) for x, y in positions]
+    
+    def __iter__(self):
+        return iter(self.positions)
+    
+    def __len__(self):
+        return len(self.positions)
+
+class HexagonalLayout:
+    def __init__(self, n_rings: int, spacing: float,
+                 offset: Tuple[float, float] = (0, 0), 
+                 rotation: float = 0):
+        """Hexagonal packing layout with guaranteed minimum distance.
+        
+        Args:
+            n_rings: Number of hexagonal rings around center
+            spacing: Distance between adjacent points (guaranteed minimum)
+            offset: Translation offset
+            rotation: Rotation angle in radians
+            
+        Number of points: 1 + 6 + 12 + ... + 6n = 3n(n+1) + 1
+        """
+        positions = [(0.0, 0.0)]  # Center
+        
+        for ring in range(1, n_rings + 1):
+            for i in range(6):  # 6 sectors
+                for j in range(ring):
+                    # Hexagonal coordinates
+                    angle = i * jnp.pi / 3
+                    x = spacing * (ring * jnp.cos(angle) + 
+                                  j * jnp.cos(angle + 2*jnp.pi/3))
+                    y = spacing * (ring * jnp.sin(angle) + 
+                                  j * jnp.sin(angle + 2*jnp.pi/3))
+                    positions.append((float(x), float(y)))
+        
+        self.positions = self._apply_transform(positions, offset, rotation)
+    
+    def _apply_transform(self, positions, offset, rotation):
+        if rotation != 0:
+            cos_r, sin_r = jnp.cos(rotation), jnp.sin(rotation)
+            positions = [(float(x*cos_r - y*sin_r), float(x*sin_r + y*cos_r))
+                        for x, y in positions]
+        return [(x + offset[0], y + offset[1]) for x, y in positions]
+    
+    def __iter__(self):
+        return iter(self.positions)
+    
+    def __len__(self):
+        return len(self.positions)
     
 class Gaussian:
     """Gaussian beam generator."""
@@ -109,7 +217,6 @@ class Gaussian:
         r2 = x**2 + y**2
         A = jnp.sqrt(2.0 / (jnp.pi * self.w0**2))
         return A*jnp.exp(-r2 / self.w0**2).astype(self.dtype)
-
 
 class HermiteGaussian:
     """Hermite-Gaussian mode generator."""
@@ -167,7 +274,6 @@ class HermiteGaussian:
         
         return jnp.array(hg * norm, dtype=self.dtype)
 
-    
 class LaguerreGaussian:
     """Laguerre-Gaussian mode generator."""
     
