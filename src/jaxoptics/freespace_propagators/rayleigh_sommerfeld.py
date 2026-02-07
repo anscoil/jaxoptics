@@ -119,10 +119,12 @@ class RSProp(eqx.Module):
 
         # IFFT
         u_prop_padded = jnp.fft.ifft2(u_fft_prop, axes=spatial_axes)
-
-        # Extract top-left corner (original size)
-        slices = [slice(None)] * (u.electric.ndim - u.ndim_spatial)  # keep batch dims
-        slices.extend([slice(0, s) for s in spatial_shape])  # extract original spatial
+    
+        # Extract top-left corner - preserve ALL leading dimensions
+        # (batch dims might have been created by broadcasting with kernel)
+        n_leading_dims = u_prop_padded.ndim - u.ndim_spatial
+        slices = [slice(None)] * n_leading_dims  # keep ALL leading dims
+        slices.extend([slice(0, s) for s in spatial_shape])  # extract spatial
         electric_prop = u_prop_padded[tuple(slices)]
         
         return ScalarField(electric_prop, u.ds, u.wavelengths)
