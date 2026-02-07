@@ -96,6 +96,8 @@ def visualize_stack(stack,
     fig.canvas.mpl_connect('key_press_event', on_key)
     plt.show()
 
+    return fig, axes
+
 def visualize_intensity(*stacks):
     """Display total intensity of multiple stacks side by side.
     
@@ -117,3 +119,73 @@ def visualize_intensity(*stacks):
     
     plt.tight_layout()
     plt.show()
+    
+    return fig, axes
+
+def visualize_fields(*fields, 
+                     transform=None,
+                     cmap='inferno',
+                     titles=None,
+                     figsize=None,
+                     colorbar=False,
+                     vmin=None,
+                     vmax=None):
+    """Display transformed fields side by side.
+    
+    Args:
+        *fields: Variable number of arrays or ScalarField objects
+        transform: Function to apply to each field. Default: total intensity.
+                  Examples: 
+                    lambda x: jnp.abs(x)**2  (intensity)
+                    lambda x: jnp.angle(x)   (phase)
+                    lambda x: jnp.real(x)    (real part)
+                    lambda x: jnp.log10(jnp.abs(x)**2 + 1e-10)  (log intensity)
+        cmap: Colormap name (default: 'inferno')
+        titles: List of titles for each subplot (optional)
+        figsize: Tuple (width, height) or None for auto
+        colorbar: Whether to show colorbar for each plot
+        vmin, vmax: Color scale limits (optional)
+    
+    Returns:
+        fig, axes
+    """
+    # Default transform: total intensity
+    if transform is None:
+        def transform(field):
+            # Extract array if ScalarField
+            arr = field[:] if hasattr(field, '__getitem__') else field
+            if arr.ndim == 2:
+                return jnp.abs(arr)**2
+            else:
+                return jnp.sum(jnp.abs(arr)**2, axis=0)
+    
+    n_fields = len(fields)
+    
+    # Auto figsize if not provided
+    if figsize is None:
+        figsize = (4*n_fields, 4)
+    
+    fig, axes = plt.subplots(1, n_fields, figsize=figsize)
+    if n_fields == 1:
+        axes = [axes]
+    
+    for i, (ax, field) in enumerate(zip(axes, fields)):
+        # Apply transform
+        data = transform(field)
+        
+        # Display
+        im = ax.imshow(data, cmap=cmap, vmin=vmin, vmax=vmax)
+        ax.axis('off')
+        
+        # Add title if provided
+        if titles is not None and i < len(titles):
+            ax.set_title(titles[i])
+        
+        # Add colorbar if requested
+        if colorbar:
+            plt.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+    
+    plt.tight_layout()
+    plt.show()
+    
+    return fig, axes
