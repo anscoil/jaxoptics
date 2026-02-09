@@ -1,6 +1,6 @@
 # JAXOptics
 
-A minimal Python/JAX implementation of scalar optical field propagation with automatic differentiation. Built with [Equinox](https://github.com/patrick-kidger/equinox) for composable differentiable optical systems. Created to explore the JAX ecosystem as an alternative to the full [FluxOptics.jl](https://github.com/anscoil/FluxOptics.jl) framework.
+A minimal Python implementation of scalar optical field propagation with automatic differentiation using [JAX](https://github.com/google/jax) and [Equinox](https://github.com/patrick-kidger/equinox). Created to explore the JAX ecosystem as an alternative to the full [FluxOptics.jl](https://github.com/anscoil/FluxOptics.jl) framework.
 
 ## Purpose
 
