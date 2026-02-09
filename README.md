@@ -94,7 +94,7 @@ If you use this code, please cite:
 @software{jaxoptics2026,
   author = {Barré, Nicolas},
   title = {JAXOptics: Differentiable Optical Propagation in JAX},
-  year = {2025},
+  year = {2026},
   publisher = {Zenodo},
   doi = {10.5281/zenodo.18547486},
   url = {https://github.com/anscoil/jaxoptics}
