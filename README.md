@@ -1,6 +1,8 @@
 # JAXOptics
 
-A minimal Python/JAX implementation of scalar optical field propagation with automatic differentiation. Built with [Equinox](https://github.com/patrick-kidger/equinox) for composable differentiable optical systems. Created to explore the JAX ecosystem as an alternative to the full [FluxOptics.jl](https://github.com/anscoil/FluxOptics.jl) framework.
+[![DOI](https://zenodo.org/badge/1134334955.svg)](https://doi.org/10.5281/zenodo.18547486)
+
+A minimal Python implementation of scalar optical field propagation with automatic differentiation using [JAX](https://github.com/google/jax) and [Equinox](https://github.com/patrick-kidger/equinox). Created to explore the JAX ecosystem as an alternative to the full [FluxOptics.jl](https://github.com/anscoil/FluxOptics.jl) framework.
 
 ## Purpose
 
@@ -94,12 +96,10 @@ If you use this code, please cite:
   title = {JAXOptics: Differentiable Optical Propagation in JAX},
   year = {2025},
   publisher = {Zenodo},
-  doi = {10.5281/zenodo.XXXXXXX},
+  doi = {10.5281/zenodo.18547486},
   url = {https://github.com/anscoil/jaxoptics}
 }
 ```
-
-*(DOI will be assigned upon first Zenodo release)*
 
 ## License
 
