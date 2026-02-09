@@ -1,12 +1,12 @@
 # JAXOptics
 
-A minimal Python/JAX implementation of scalar optical field propagation with automatic differentiation, created to explore the JAX ecosystem as an alternative to the full [FluxOptics.jl](https://github.com/anscoil/FluxOptics.jl) framework.
+A minimal Python/JAX implementation of scalar optical field propagation with automatic differentiation. Built with [Equinox](https://github.com/patrick-kidger/equinox) for composable differentiable optical systems. Created to explore the JAX ecosystem as an alternative to the full [FluxOptics.jl](https://github.com/anscoil/FluxOptics.jl) framework.
 
 ## Purpose
 
-This project reimplements a **subset** of FluxOptics.jl functionality to evaluate:
-- **JAX** (Python): JIT compilation via XLA, automatic differentiation, GPU support
-- Comparison with **Julia/Zygote** (FluxOptics.jl): Native GPU via CUDA.jl, composable AD, multiple dispatch
+This project reimplements a **subset** of FluxOptics.jl functionality using JAX and Equinox, to compare performance and developer experience between:
+- **JAX/Equinox** (Python): JIT compilation via XLA, PyTree-based composability, GPU support
+- **Julia/Zygote** (FluxOptics.jl): Native GPU via CUDA.jl, composable AD, multiple dispatch
 
 JAXOptics focuses on **simple tensor-based operations** (FFT, phase masks, elementwise operations) where both frameworks are expected to perform similarly. For production work and comprehensive features (3D propagation, arbitrary geometries, extensive mode libraries), use [FluxOptics.jl](https://github.com/anscoil/FluxOptics.jl).
 
@@ -18,7 +18,7 @@ JAXOptics focuses on **simple tensor-based operations** (FFT, phase masks, eleme
 - Trainable propagation distances
 
 **Optical Elements:**
-- Phase masks (trainable parameters via Equinox)
+- Phase masks
 
 **Mode Generation:**
 - Laguerre-Gaussian modes
@@ -89,7 +89,7 @@ This project serves primarily as a comparison reference. If you're interested in
 If you use this code, please cite:
 
 ```bibtex
-@software{jaxoptics2025,
+@software{jaxoptics2026,
   author = {Barré, Nicolas},
   title = {JAXOptics: Differentiable Optical Propagation in JAX},
   year = {2025},
