@@ -49,7 +49,10 @@ def make_AS_kernel(ns: Tuple[int, int],
         # Exact: H = exp(i 2π z sqrt(1/λ² - fx² - fy²))
         f_squared = 1.0 / wl**2
         sqrt_arg = f_squared - fx**2 - fy**2
-        kernel = jnp.exp(1j * 2 * jnp.pi * z_sign * z_abs * jnp.sqrt(sqrt_arg))
+        if z > 0:
+            kernel = jnp.exp(1j * 2 * jnp.pi * z_abs * jnp.sqrt(sqrt_arg))
+        else:
+            kernel = conj(jnp.exp(1j * 2 * jnp.pi * z_abs * jnp.sqrt(sqrt_arg)))
     
     # Apply filter if provided
     if filter_fn is not None:
