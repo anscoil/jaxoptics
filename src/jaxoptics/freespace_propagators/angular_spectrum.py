@@ -52,7 +52,7 @@ def make_AS_kernel(ns: Tuple[int, int],
         if z > 0:
             kernel = jnp.exp(1j * 2 * jnp.pi * z_abs * jnp.sqrt(sqrt_arg))
         else:
-            kernel = conj(jnp.exp(1j * 2 * jnp.pi * z_abs * jnp.sqrt(sqrt_arg)))
+            kernel = jnp.conj(jnp.exp(1j * 2 * jnp.pi * z_abs * jnp.sqrt(sqrt_arg)))
     
     # Apply filter if provided
     if filter_fn is not None:
