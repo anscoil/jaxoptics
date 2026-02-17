@@ -1,18 +1,25 @@
 # JAXOptics
-
 [![DOI](https://zenodo.org/badge/1134334955.svg)](https://doi.org/10.5281/zenodo.18547486)
 
 A minimal Python implementation of scalar optical field propagation with automatic differentiation using [JAX](https://github.com/google/jax) and [Equinox](https://github.com/patrick-kidger/equinox). Created to explore the JAX ecosystem as an alternative to the full [FluxOptics.jl](https://github.com/anscoil/FluxOptics.jl) framework.
 
-## Purpose
+## 🎯 Purpose
 
-This project reimplements a **subset** of FluxOptics.jl functionality using JAX and Equinox, to compare performance and developer experience between:
-- **JAX/Equinox** (Python): JIT compilation via XLA, PyTree-based composability, GPU support
-- **Julia/Zygote** (FluxOptics.jl): Native GPU via CUDA.jl, composable AD, multiple dispatch
+This project reimplements a **subset** of [FluxOptics.jl](https://github.com/anscoil/FluxOptics.jl) functionality in Python using JAX and Equinox, to compare performance and developer experience between the two ecosystems. It also serves as a **well-optimized Python baseline** for benchmarking against other Python optical simulation libraries.
 
-JAXOptics focuses on **simple tensor-based operations** (FFT, phase masks, elementwise operations) where both frameworks are expected to perform similarly. For production work and comprehensive features (3D propagation, arbitrary geometries, extensive mode libraries), use [FluxOptics.jl](https://github.com/anscoil/FluxOptics.jl).
+## ⚡ Performance
 
-## Implemented Features
+JAXOptics significantly outperforms [TorchOptics](https://github.com/MatthewFilipovich/torchoptics)
+on Angular Spectrum propagation benchmarks (512×512, NVIDIA RTX 4070): **two orders of magnitude
+faster** on isolated propagation, and **13× faster** on a simple 3-plane monomode
+[beam splitter design](https://anscoil.github.io/FluxOptics.jl/stable/api/#Typical-Workflow:-Beam-Splitter).
+
+JAXOptics is also within **20% of FluxOptics.jl** on propagation-only benchmarks, and may match
+or slightly exceed it on full optimization loops thanks to XLA whole-graph compilation.
+
+→ [Full benchmark details](https://github.com/anscoil/FluxOptics.jl/tree/main/benchmarks)
+
+## 🔧 Implemented Features
 
 **Propagation Methods:**
 - Angular Spectrum (AS) propagation
@@ -32,13 +39,13 @@ JAXOptics focuses on **simple tensor-based operations** (FFT, phase masks, eleme
 - Field visualization
 - Composable optical sequences
 
-## Installation
+## 📦 Installation
 
 ```bash
 pip install jax jaxlib equinox optax matplotlib
 ```
 
-For GPU support, install JAX with CUDA:
+For GPU support:
 ```bash
 pip install jax[cuda12]  # Adjust CUDA version as needed
 ```
@@ -50,13 +57,12 @@ cd jaxoptics
 pip install -e .
 ```
 
-## Quick Example
+## 🚀 Quick Example
 
 ```python
 import jax.numpy as jnp
 from jaxoptics import *
 
-# Create field
 ns = (512, 512)
 ds = (1.0, 1.0)  # μm
 wavelength = 0.532  # μm
@@ -64,31 +70,27 @@ wavelength = 0.532  # μm
 modes = generate_mode_stack(laguerre_gaussian_groups(5, 25.0), ns, ds)
 field = ScalarField(modes, ds, wavelength)
 
-# Propagate with phase mask
 propagator = ASProp(field, z=1000.0)
 phase_mask = Phase(field, trainable=True)
-
 system = OpticalSequence(propagator, phase_mask, propagator)
 output = system(field)
 ```
 
-See `examples/` for complete optimization workflows.
+See [`examples/`](examples) for complete optimization workflows.
 
-## Performance Notes
+## ⚠️ Current Limitations
 
-For simple tensor-based operations (FFT, phase masks, elementwise operations), JAX and FluxOptics.jl perform comparably—both leverage optimized GPU kernels and benefit from the inherently parallel nature of these operations.
+JAXOptics currently focuses on **scalar fields with phase-only elements**, covering the most common use cases in beam shaping and diffractive optics. More advanced components are available in [FluxOptics.jl](https://github.com/anscoil/FluxOptics.jl).
 
-Performance differences may emerge for:
-- More complex optical systems (custom propagators, arbitrary geometries)
-- Large-scale problems requiring sophisticated memory management
+## 🤝 Contributing
 
-## Contributing
+JAXOptics was developed primarily as a benchmark reference, but the JAX/Equinox stack turned
+out to be a genuinely productive environment for optical simulations. Extending it toward a
+more complete feature set while keeping the performance advantages over existing Python libraries
+would be a natural next step. If you are interested in collaborating or have a use case in mind,
+feel free to reach out.
 
-This project serves primarily as a comparison reference. If you're interested in developing JAXOptics further or using it for your research, please contact me.
-
-## Citation
-
-If you use this code, please cite:
+## 📝 Citation
 
 ```bibtex
 @software{jaxoptics2026,
@@ -101,11 +103,11 @@ If you use this code, please cite:
 }
 ```
 
-## License
+## 📄 License
 
-MIT License. See FluxOptics.jl for the reference implementation and comprehensive documentation.
+[MIT License](LICENSE).
 
-## Related Projects
+## 🔗 Related Projects
 
-- **[FluxOptics.jl](https://github.com/anscoil/FluxOptics.jl)** - Full-featured Julia framework (primary project)
-- **[TorchOptics](https://github.com/MatthewFilipovich/torchoptics)** - PyTorch-based optical propagation
+- **[FluxOptics.jl](https://github.com/anscoil/FluxOptics.jl)** — Full-featured Julia framework (primary project)
+- **[TorchOptics](https://github.com/MatthewFilipovich/torchoptics)** — PyTorch-based optical propagation
